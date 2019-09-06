@@ -1,7 +1,8 @@
-import { window, ExtensionContext, commands } from 'vscode';
+import { window, ExtensionContext, commands, Uri } from 'vscode';
 
 import { Cmd } from './cmd';
 import { getRootDir, openAndFormatFile } from './util';
+import { generateRepoCode, generateInterfacesCode } from './repository_code';
 
 import fs = require('fs');
 import pascalCase = require('pascal-case');
@@ -12,6 +13,7 @@ export function setup(context: ExtensionContext) {
         const quickPick = window.createQuickPick();
         quickPick.items = [
             new Cmd("Create repository", () => generateRepository()),
+            new Cmd("Create interface", () => generateInterfaces()),
             new Cmd("Implement interface to repository", () => generateImplementationRepo())
         ];
         quickPick.onDidChangeSelection(selection => {
@@ -30,11 +32,6 @@ export function setup(context: ExtensionContext) {
 }
 
 async function generateRepository() {
-    const rootDir = getRootDir();
-
-    if (!rootDir) {
-        return;
-    }
 
     const name = await window.showInputBox({
         value: '',
@@ -51,68 +48,22 @@ async function generateRepository() {
         placeHolder: 'Source directory, eg: github.com/soerjadi/go-extension'
     }) || "";
 
-    const namePascal = pascalCase(name);
-    const path = `${rootDir}/repository`;
-    const filePath = `${rootDir}/repository/${snakeCase(name)}.go`;
+    generateRepoCode(name, sourcePackage);
 
-    if (!fs.existsSync(path)) {
-        window.showWarningMessage(`Path not exists: ${path}`);
+}
+
+async function generateInterfaces() {
+    const name = await window.showInputBox({
+        value: '',
+        placeHolder: 'Interfaces name, eq: User'
+    }) || "";
+
+    if (name.length === 0) {
+        window.showInformationMessage("No name");
         return;
     }
 
-    if (fs.existsSync(filePath)) {
-        window.showWarningMessage(`File already exists: ${filePath}`);
-        return;
-    }
-
-    const repoCode = `
-    package repository
-
-    import (
-        "database/sql"
-
-        "${sourcePackage}/interfaces"
-    )
-    
-
-    // ${namePascal}RepositoryImpl struct implementation ${name.toLowerCase()} repository
-    type ${namePascal}RepositoryImpl struct {
-        Conn *sql.DB
-    }
-
-    // ${namePascal}RepositoryWithRDB Data Access for ${namePascal}
-    func ${namePascal}RepositoryWithRDB(conn *sql.DB) interfaces.${namePascal} {
-        return &${namePascal}RepositoryImpl{Conn: conn}
-    }
-
-    func (repo *${namePascal}RepositoryImpl) query(q string, args ...interface{}) (*sql.Rows, error) {
-        stmt, err := repo.Conn.Prepare(q)
-
-        if err != nil {
-            return nil, err
-        }
-
-        defer stmt.Close()
-
-        return stmt.Query(args...)
-    }
-
-    func (repo *${namePascal}RepositoryImpl) queryRow(q string, args ...interface{}) (*sql.Row, error) {
-        stmt, err := repo.Conn.Prepare(q)
-
-        if err != nil {
-            return nil, err
-        }
-
-        defer stmt.Close()
-
-        return stmt.QueryRow(args...), nil
-    }
-    `;
-
-    fs.writeFileSync(filePath, repoCode);
-
-    openAndFormatFile(filePath);
+    generateInterfacesCode(name);
 
 }
 
