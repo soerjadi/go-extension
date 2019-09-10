@@ -92,6 +92,22 @@ export async function generateRepoCode(name: string, sourcePackage: string, open
         return &${namePascal}RepositoryImpl{Conn: conn}
     }
 
+    var tableName = "table_name"
+
+    func (repo *AccessTokenImpl) execQuery(q string, args ...interface{}) error {
+        stmt, err := repo.Conn.Prepare(q)
+    
+        if err != nil {
+            return err
+        }
+    
+        defer stmt.Close()
+    
+        _, err = stmt.Exec(args...)
+    
+        return err
+    }
+
     func (repo *${namePascal}RepositoryImpl) query(q string, args ...interface{}) (*sql.Rows, error) {
         stmt, err := repo.Conn.Prepare(q)
 
