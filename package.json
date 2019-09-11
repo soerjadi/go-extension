@@ -26,6 +26,10 @@
             {
                 "command": "extension.model",
                 "title": "Go: Generate model"
+            },
+            {
+                "command": "extention.test",
+                "title": "GO: Generate test case"
             }
         ]
     },
