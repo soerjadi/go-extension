@@ -5,6 +5,7 @@ import { getRootDir, openAndFormatFile, reformatDocument } from './util';
 import fs = require('fs');
 import pascalCase = require('pascal-case');
 import snakeCase = require('snake-case');
+import camelCase = require('camel-case');
 
 export async function generateInterfacesCode(name: string, openFile: boolean = true) {
     const rootDir = getRootDir();
@@ -92,7 +93,7 @@ export async function generateRepoCode(name: string, sourcePackage: string, open
         return &${namePascal}RepositoryImpl{Conn: conn}
     }
 
-    var tableName = "table_name"
+    var ${camelCase("name")}Name = "table_name"
 
     func (repo *AccessTokenImpl) execQuery(q string, args ...interface{}) error {
         stmt, err := repo.Conn.Prepare(q)
