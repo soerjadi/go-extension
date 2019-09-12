@@ -16,7 +16,7 @@ export async function generateInterfacesCode(name: string, openFile: boolean = t
 
     const namePascal = pascalCase(name);
     const path = `${rootDir}/interfaces`;
-    const filePath = `${path}/${snakeCase(name)}.go`;
+    const filePath = `${path}/${snakeCase(name)}_interface.go`;
 
     if (!fs.existsSync(path)) {
         window.showWarningMessage(`Path not exists: ${path}`);
@@ -56,7 +56,7 @@ export async function generateRepoCode(name: string, sourcePackage: string, open
 
     const namePascal = pascalCase(name);
     const path = `${rootDir}/repository`;
-    const filePath = `${rootDir}/repository/${snakeCase(name)}.go`;
+    const filePath = `${rootDir}/repository/${snakeCase(name)}_repository.go`;
 
     if (!fs.existsSync(path)) {
         window.showWarningMessage(`Path not exists: ${path}`);
@@ -93,9 +93,9 @@ export async function generateRepoCode(name: string, sourcePackage: string, open
         return &${namePascal}RepositoryImpl{Conn: conn}
     }
 
-    var ${camelCase("name")}Name = "table_name"
+    var ${camelCase(name)}Name = "table_name"
 
-    func (repo *AccessTokenImpl) execQuery(q string, args ...interface{}) error {
+    func (repo *${namePascal}RepositoryImpl) execQuery(q string, args ...interface{}) error {
         stmt, err := repo.Conn.Prepare(q)
     
         if err != nil {

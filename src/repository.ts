@@ -7,6 +7,7 @@ import { generateRepoCode, generateInterfacesCode } from './repository_code';
 import fs = require('fs');
 import pascalCase = require('pascal-case');
 import snakeCase = require('snake-case');
+import camelCase = require('camel-case');
 
 export function setup(context: ExtensionContext) {
     context.subscriptions.push(commands.registerCommand('extension.repository', async () => {
@@ -95,10 +96,10 @@ async function generateImplementationRepo() {
                 }
 
                 name = s[1].trim();
-                
+                continue;
             }
             if (name.length > 0) {
-                s = reFun.exec(line);
+                s = reFun.exec(line.trim());
                 if (s === null) {
                     continue;
                 }
@@ -118,14 +119,14 @@ async function generateImplementationRepo() {
 
         const interfaceCode = newLines.join('\n');
 
-        const filePath = `${rootDir}/repository/${snakeCase(name)}.go`;
+        const filePath = `${rootDir}/repository/${snakeCase(name)}_repository.go`;
 
         if (!fs.existsSync(filePath)) {
             window.showWarningMessage(`Path file not exists: ${filePath}`);
             return;
         }
 
-        insertLineInFile(filePath, "^var tableName =.*\"$", interfaceCode);
+        insertLineInFile(filePath, `^var ${camelCase(name)}Name =.*\"$`, interfaceCode);
         // fs.appendFileSync(filePath, interfaceCode);
 
         openAndFormatFile(filePath);

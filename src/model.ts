@@ -49,8 +49,8 @@ async function createModel() {
     const interfacesPath = `${rootDir}/interfaces`;
 
     const modelFilePath = `${modelPath}/${nameSnake}.go`;
-    const repositoryFilePath = `${repositoryPath}/${nameSnake}.go`;
-    const interfacesFilePath = `${interfacesPath}/${nameSnake}.go`;
+    const repositoryFilePath = `${repositoryPath}/${nameSnake}_repository.go`;
+    const interfacesFilePath = `${interfacesPath}/${nameSnake}_interface.go`;
 
     let repositoryFileExists = false;
     let interfacesFileExists = false;
