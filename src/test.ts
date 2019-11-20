@@ -7,7 +7,7 @@ import fs = require('fs');
 import snakeCase = require('snake-case');
 
 export function setup(context: ExtensionContext) {
-    context.subscriptions.push(commands.registerCommand('extension.test', async () => {
+    context.subscriptions.push(commands.registerCommand('extention.test', async () => {
         const quickPick = window.createQuickPick();
         quickPick.items = [
             new Cmd("Test case from interfaces", () => generateTestFromImplementationRepo())
