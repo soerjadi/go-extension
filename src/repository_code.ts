@@ -55,6 +55,7 @@ export async function generateRepoCode(name: string, sourcePackage: string, open
     }
 
     const namePascal = pascalCase(name);
+    const nameCamel = camelCase(name);
     const path = `${rootDir}/repository`;
     const filePath = `${rootDir}/repository/${snakeCase(name)}_repository.go`;
 
@@ -93,7 +94,7 @@ export async function generateRepoCode(name: string, sourcePackage: string, open
         return &${namePascal}RepositoryImpl{Conn: conn}
     }
 
-    var ${camelCase(name)}Name = "table_name"
+    var ${nameCamel}Table = "table_name"
 
     func (repo *${namePascal}RepositoryImpl) execQuery(q string, args ...interface{}) error {
         stmt, err := repo.Conn.Prepare(q)
