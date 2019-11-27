@@ -56,8 +56,11 @@ export async function generateRepoCode(name: string, sourcePackage: string, open
 
     const namePascal = pascalCase(name);
     const nameCamel = camelCase(name);
-    const path = `${rootDir}/repository`;
-    const filePath = `${rootDir}/repository/${snakeCase(name)}_repository.go`;
+    const nameSnake = snakeCase(name);
+
+    const path = `${rootDir}/${nameSnake}/repository`;
+    const filePath = `${path}/${nameSnake}_repository.go`;
+    const fileTestPath = `${path}/${nameSnake}_repository_test.go`;
 
     if (!fs.existsSync(path)) {
         window.showWarningMessage(`Path not exists: ${path}`);
@@ -73,8 +76,7 @@ export async function generateRepoCode(name: string, sourcePackage: string, open
     if (sourcePackage.length > 0) {
         importCode = `import (
             "database/sql"
-
-            "${sourcePackage}/interfaces"
+            "context"
         )
         `;
     }
@@ -84,58 +86,56 @@ export async function generateRepoCode(name: string, sourcePackage: string, open
 
     ${importCode}
 
-    // ${namePascal}RepositoryImpl struct implementation ${name.toLowerCase()} repository
-    type ${namePascal}RepositoryImpl struct {
+    // ${nameCamel}RepositoryImpl struct implementation ${name.toLowerCase()} repository
+    type ${nameCamel}RepositoryImpl struct {
         Conn *sql.DB
     }
 
     // ${namePascal}RepositoryWithRDB Data Access for ${namePascal}
-    func ${namePascal}RepositoryWithRDB(conn *sql.DB) interfaces.${namePascal} {
+    func New${namePascal}Repository(conn *sql.DB) ${nameSnake}.Repository {
         return &${namePascal}RepositoryImpl{Conn: conn}
     }
 
     var ${nameCamel}Table = "table_name"
 
-    func (repo *${namePascal}RepositoryImpl) execQuery(q string, args ...interface{}) error {
-        stmt, err := repo.Conn.Prepare(q)
-    
-        if err != nil {
-            return err
-        }
-    
-        defer stmt.Close()
-    
-        _, err = stmt.Exec(args...)
-    
-        return err
-    }
-
-    func (repo *${namePascal}RepositoryImpl) query(q string, args ...interface{}) (*sql.Rows, error) {
-        stmt, err := repo.Conn.Prepare(q)
-
+    func (repo *${namePascal}RepositoryImpl) fetch(ctx context.Context, query string, args ...interface{}) ([]*models.${namePascal}, error) {
+        rows, err := p.Conn.QueryContext(ctx, query, args...)
         if err != nil {
             return nil, err
         }
+    
+        defer func() {
+            err := rows.Close()
+            if err != nil {
+                // TODO(*): add logger here
+            }
+        }()
+    
+        result := make([]*models.${namePascal}, 0)
+        for rows.Next() {
+            t := new(models.${namePascal})
 
-        defer stmt.Close()
+            // TODO(*): implement scanner here
 
-        return stmt.Query(args...)
-    }
-
-    func (repo *${namePascal}RepositoryImpl) queryRow(q string, args ...interface{}) (*sql.Row, error) {
-        stmt, err := repo.Conn.Prepare(q)
-
-        if err != nil {
-            return nil, err
+            result = append(result, t)
         }
 
-        defer stmt.Close()
+        return result, nil
+    }
+    `;
 
-        return stmt.QueryRow(args...), nil
+    const repoTestCode = `
+    package repository_test
+
+    import "testing"
+
+    func Test${namePascal}(t *testing.T) {
+        t.Fatalf("fix me!")
     }
     `;
 
     fs.writeFileSync(filePath, repoCode);
+    fs.writeFileSync(fileTestPath, repoTestCode);
 
     if (openFile) {
         openAndFormatFile(filePath);
