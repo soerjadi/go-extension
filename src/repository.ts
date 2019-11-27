@@ -79,8 +79,6 @@ async function generateImplementationRepo() {
         const reName = new RegExp("type (\\w*) interface {");
         const reFun = new RegExp("(\\w*)");
 
-        var name = "";
-
         let lines = text.split('\n');
         let newLines = [];
 

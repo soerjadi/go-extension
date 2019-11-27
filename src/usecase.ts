@@ -13,6 +13,7 @@ export function setup(context: ExtensionContext) {
         const quickPick = window.createQuickPick();
         quickPick.items = [
             new Cmd("Generate usecase", () => generateUsecase()),
+            new Cmd("Implement interface", () => generateImplementationUsecase()),
         ];
         quickPick.onDidChangeSelection(selection => {
             if (selection[0]) {
@@ -112,4 +113,72 @@ export async function generateUsecaseCode(name: string, sourcePackage: string, o
         var fileUri = Uri.file(filePath);
         reformatDocument(fileUri);
     }
+}
+
+async function generateImplementationUsecase() {
+    const rootDir = getRootDir();
+
+    if (!rootDir) {
+        return;
+    }
+
+    const name = await window.showInputBox({
+        value: '',
+        placeHolder: 'Usecasename name, eg: User'
+    }) || "";
+
+    if (name.length === 0) {
+        window.showInformationMessage("No name");
+        return;
+    }
+
+    const snakeName = snakeCase(name);
+    const camelName = camelCase(name);
+
+    const editor = window.activeTextEditor!;
+    const text = editor.document.getText(editor.selection);
+
+    editor.edit(builder => {
+        const reName = new RegExp("type (\\w*) interface {");
+        const reFun = new RegExp("(\\w*)");
+
+        let lines = text.split('\n');
+        let newLines = [];
+
+        for (let line of lines) {
+            var s = reName.exec(line);
+            if (s && s[1]) {
+                continue;
+            } else {
+                s = reFun.exec(line.trim());
+                if (s === null) {
+                    continue;
+                }
+
+                if (s[1]) {
+                    // get line as function
+                    newLines.push("");
+                    newLines.push(`// ${s[1]} description`);
+                    newLines.push(`func (repo *${camelName}Usecase) ${line.trim()} {`);
+                    newLines.push(`     panic("implement me")`);
+                    newLines.push("}");
+                }
+                
+            }
+
+        }
+
+        const interfaceCode = newLines.join('\n');
+
+        const filePath = `${rootDir}/${snakeName}/usecase/${snakeName}_usecase.go`;
+
+        if (!fs.existsSync(filePath)) {
+            window.showWarningMessage(`Path file not exists: ${filePath}`);
+            return;
+        }
+
+        fs.appendFileSync(filePath, interfaceCode);
+
+        openAndFormatFile(filePath);
+    });
 }
