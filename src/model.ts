@@ -45,15 +45,16 @@ async function createModel() {
     const nameSnake = snakeCase(name);
 
     const modelPath = `${rootDir}/models`;
-    const repositoryPath = `${rootDir}/repository`;
-    const interfacesPath = `${rootDir}/interfaces`;
+    const modelDirPath = `${rootDir}/${nameSnake}`;
+    const repositoryPath = `${modelDirPath}/repository`;
+    const usecasePath = `${modelDirPath}/usecase`;
 
     const modelFilePath = `${modelPath}/${nameSnake}.go`;
-    const repositoryFilePath = `${repositoryPath}/${nameSnake}_repository.go`;
-    const interfacesFilePath = `${interfacesPath}/${nameSnake}_interface.go`;
+    const repositoryFilePath = `${modelDirPath}/repository.go`;
+    const usecaseFilePath = `${modelDirPath}/usecase.go`;
 
     let repositoryFileExists = false;
-    let interfacesFileExists = false;
+    let usecaseFilePathExists = false;
 
     if (!fs.existsSync(modelPath)) {
         window.showWarningMessage(`Path not exists: ${modelPath}`);
@@ -69,16 +70,16 @@ async function createModel() {
         fs.mkdirSync(repositoryPath);
     }
 
-    if (!fs.existsSync(interfacesPath)) {
-        fs.mkdirSync(interfacesPath);
+    if (!fs.existsSync(usecasePath)) {
+        fs.mkdirSync(usecasePath);
     }
 
     if (fs.existsSync(repositoryFilePath)) {
         repositoryFileExists = true;
     }
 
-    if (fs.existsSync(interfacesFilePath)) {
-        interfacesFileExists = true;
+    if (fs.existsSync(usecaseFilePath)) {
+        usecaseFilePathExists = true;
     }
 
     const modelCode = `
@@ -96,9 +97,9 @@ async function createModel() {
         generateRepoCode(name, "", false);
     }
 
-    if (!interfacesFileExists) {
-        generateInterfacesCode(name, false);
-    }
+    // if (!interfacesFileExists) {
+    //     generateInterfacesCode(name, false);
+    // }
 
     openAndFormatFile(modelFilePath);
 
