@@ -88,7 +88,7 @@ export async function generateUsecaseCode(name: string, sourcePackage: string, o
     func New${namePascal}Usecase(r ${nameSnake}.Repository, timeout time.Duration) ${nameSnake}.Usecase {
         return &${nameCamel}Usecase{
             repo: r,
-            timeout: timeout
+            timeout: timeout,
         }
     }
     `;
