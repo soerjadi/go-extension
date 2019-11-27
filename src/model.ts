@@ -2,11 +2,12 @@ import { window, ExtensionContext, commands } from 'vscode';
 
 import { Cmd } from './cmd';
 import { getRootDir, openAndFormatFile } from './util';
-import { generateRepoCode, generateInterfacesCode } from './repository_code';
+import { generateRepoCode } from './repository_code';
 
 import fs = require('fs');
 import pascalCase = require('pascal-case');
 import snakeCase = require('snake-case');
+import { generateUsecaseCode } from './usecase';
 
 export function setup(context: ExtensionContext) {
     context.subscriptions.push(commands.registerCommand('extension.model', async () => {
@@ -66,20 +67,16 @@ async function createModel() {
         return;
     }
 
+    if (!fs.existsSync(modelDirPath)) {
+        fs.mkdirSync(modelDirPath);
+    }
+
     if (!fs.existsSync(repositoryPath)) {
         fs.mkdirSync(repositoryPath);
     }
 
     if (!fs.existsSync(usecasePath)) {
         fs.mkdirSync(usecasePath);
-    }
-
-    if (fs.existsSync(repositoryFilePath)) {
-        repositoryFileExists = true;
-    }
-
-    if (fs.existsSync(usecaseFilePath)) {
-        usecaseFilePathExists = true;
     }
 
     const modelCode = `
@@ -91,15 +88,39 @@ async function createModel() {
     }
     `;
 
+    const repoInterfaceCode = `
+    package ${nameSnake}
+
+    // Repository represent the ${namePascal} contract
+    type Repository interface {
+        // TODO(*): code here
+    }
+    `;
+
+    const usecsInterfaceCode = `
+    package ${nameSnake}
+
+    // Usecase represent the ${namePascal} contract
+    type Usecase interface {
+        // TODO(*): code here
+    }
+    `;
+
     fs.writeFileSync(modelFilePath, modelCode);
 
-    if (!repositoryFileExists) {
-        generateRepoCode(name, "", false);
+    if (!fs.existsSync(repositoryFilePath)) {
+        fs.writeFileSync(repositoryFilePath, repoInterfaceCode);
     }
 
-    // if (!interfacesFileExists) {
-    //     generateInterfacesCode(name, false);
-    // }
+    if (!fs.existsSync(usecaseFilePath)) {
+        fs.writeFileSync(usecaseFilePath, usecsInterfaceCode);
+    }
+
+    // Generate repository code
+    generateRepoCode(name, "", false);
+
+    // Generate usecase code
+    generateUsecaseCode(name, "", false);
 
     openAndFormatFile(modelFilePath);
 

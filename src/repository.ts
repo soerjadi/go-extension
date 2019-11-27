@@ -2,7 +2,7 @@ import { window, ExtensionContext, commands } from 'vscode';
 
 import { Cmd } from './cmd';
 import { getRootDir, openAndFormatFile, insertLineInFile } from './util';
-import { generateRepoCode, generateInterfacesCode } from './repository_code';
+import { generateRepoCode } from './repository_code';
 
 import fs = require('fs');
 import pascalCase = require('pascal-case');
@@ -14,7 +14,6 @@ export function setup(context: ExtensionContext) {
         const quickPick = window.createQuickPick();
         quickPick.items = [
             new Cmd("Generate repository", () => generateRepository()),
-            new Cmd("Generate interface", () => generateInterfaces()),
             new Cmd("Implement interface", () => generateImplementationRepo()),
         ];
         quickPick.onDidChangeSelection(selection => {
@@ -53,10 +52,16 @@ async function generateRepository() {
 
 }
 
-async function generateInterfaces() {
+async function generateImplementationRepo() {
+    const rootDir = getRootDir();
+
+    if (!rootDir) {
+        return;
+    }
+
     const name = await window.showInputBox({
         value: '',
-        placeHolder: 'Interfaces name, eq: User'
+        placeHolder: 'Repository name, eg: User'
     }) || "";
 
     if (name.length === 0) {
@@ -64,16 +69,8 @@ async function generateInterfaces() {
         return;
     }
 
-    generateInterfacesCode(name);
-
-}
-
-async function generateImplementationRepo() {
-    const rootDir = getRootDir();
-
-    if (!rootDir) {
-        return;
-    }
+    const snakeName = snakeCase(name);
+    const camelName = camelCase(name);
 
     const editor = window.activeTextEditor!;
     const text = editor.document.getText(editor.selection);
@@ -90,15 +87,8 @@ async function generateImplementationRepo() {
         for (let line of lines) {
             var s = reName.exec(line);
             if (s && s[1]) {
-                if (name !== "") {
-                    window.showWarningMessage("Name already defined: " + name);
-                    return "";
-                }
-
-                name = s[1].trim();
                 continue;
-            }
-            if (name.length > 0) {
+            } else {
                 s = reFun.exec(line.trim());
                 if (s === null) {
                     continue;
@@ -108,7 +98,7 @@ async function generateImplementationRepo() {
                     // get line as function
                     newLines.push("");
                     newLines.push(`// ${s[1]} description`);
-                    newLines.push(`func (repo *${pascalCase(name)}RepositoryImpl) ${line} {`);
+                    newLines.push(`func (repo *${camelName}RepositoryImpl) ${line.trim()} {`);
                     newLines.push(`     panic("implement me")`);
                     newLines.push("}");
                 }
@@ -119,15 +109,14 @@ async function generateImplementationRepo() {
 
         const interfaceCode = newLines.join('\n');
 
-        const filePath = `${rootDir}/repository/${snakeCase(name)}_repository.go`;
+        const filePath = `${rootDir}/${snakeName}/repository/${snakeName}_repository.go`;
 
         if (!fs.existsSync(filePath)) {
             window.showWarningMessage(`Path file not exists: ${filePath}`);
             return;
         }
 
-        insertLineInFile(filePath, `^var ${camelCase(name)}Name =.*\"$`, interfaceCode);
-        // fs.appendFileSync(filePath, interfaceCode);
+        insertLineInFile(filePath, `^var ${snakeName}Table =.*\"$`, interfaceCode);
 
         openAndFormatFile(filePath);
     });

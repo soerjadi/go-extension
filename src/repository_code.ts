@@ -7,47 +7,7 @@ import pascalCase = require('pascal-case');
 import snakeCase = require('snake-case');
 import camelCase = require('camel-case');
 
-export async function generateInterfacesCode(name: string, openFile: boolean = true) {
-    const rootDir = getRootDir();
-
-    if (!rootDir) {
-        return;
-    }
-
-    const namePascal = pascalCase(name);
-    const path = `${rootDir}/interfaces`;
-    const filePath = `${path}/${snakeCase(name)}_interface.go`;
-
-    if (!fs.existsSync(path)) {
-        window.showWarningMessage(`Path not exists: ${path}`);
-        return;
-    }
-
-    if (fs.existsSync(filePath)) {
-        window.showWarningMessage(`File already exists: ${filePath}`);
-        return;
-    }
-
-    const code = `
-    package interfaces
-
-    // ${namePascal} interface
-    type ${namePascal} interface {
-        // TODO(*): code here
-    }
-    `;
-
-    fs.writeFileSync(filePath, code);
-
-    if (openFile) {
-        openAndFormatFile(filePath);
-    } else {
-        var fileUri = Uri.file(filePath);
-        reformatDocument(fileUri);
-    }
-}
-
-export async function generateRepoCode(name: string, sourcePackage: string, openFile: boolean = true) {
+export async function generateRepoCode(name: string, sourcePackage: string, openFile: boolean = true, fresh: boolean = false) {
     const rootDir = getRootDir();
 
     if (!rootDir) {
@@ -58,6 +18,7 @@ export async function generateRepoCode(name: string, sourcePackage: string, open
     const nameCamel = camelCase(name);
     const nameSnake = snakeCase(name);
 
+    const objectPath = `${rootDir}/${nameSnake}`;
     const path = `${rootDir}/${nameSnake}/repository`;
     const filePath = `${path}/${nameSnake}_repository.go`;
     const fileTestPath = `${path}/${nameSnake}_repository_test.go`;
@@ -91,15 +52,15 @@ export async function generateRepoCode(name: string, sourcePackage: string, open
         Conn *sql.DB
     }
 
-    // ${namePascal}RepositoryWithRDB Data Access for ${namePascal}
+    // New${namePascal}Repository Data Access for ${namePascal}
     func New${namePascal}Repository(conn *sql.DB) ${nameSnake}.Repository {
-        return &${namePascal}RepositoryImpl{Conn: conn}
+        return &${nameCamel}RepositoryImpl{Conn: conn}
     }
 
     var ${nameCamel}Table = "table_name"
 
-    func (repo *${namePascal}RepositoryImpl) fetch(ctx context.Context, query string, args ...interface{}) ([]*models.${namePascal}, error) {
-        rows, err := p.Conn.QueryContext(ctx, query, args...)
+    func (repo *${nameCamel}RepositoryImpl) fetch(ctx context.Context, query string, args ...interface{}) ([]*models.${namePascal}, error) {
+        rows, err := repo.Conn.QueryContext(ctx, query, args...)
         if err != nil {
             return nil, err
         }
