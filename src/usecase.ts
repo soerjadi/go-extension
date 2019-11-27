@@ -2,6 +2,7 @@ import { window, ExtensionContext, commands, Uri } from 'vscode';
 
 import { Cmd } from './cmd';
 import { getRootDir, openAndFormatFile, reformatDocument } from './util';
+import { generateTestCode } from './test';
 
 import fs = require('fs');
 import pascalCase = require('pascal-case');
@@ -139,7 +140,7 @@ async function generateImplementationUsecase() {
     const text = editor.document.getText(editor.selection);
 
     editor.edit(builder => {
-        const reName = new RegExp("type (\\w*) interface {");
+        const reName = new RegExp("type Usecase interface {");
         const reFun = new RegExp("(\\w*)");
 
         let lines = text.split('\n');
@@ -178,6 +179,7 @@ async function generateImplementationUsecase() {
         }
 
         fs.appendFileSync(filePath, interfaceCode);
+        generateTestCode(name, text, 2);
 
         openAndFormatFile(filePath);
     });

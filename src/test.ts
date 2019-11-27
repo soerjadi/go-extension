@@ -1,7 +1,7 @@
-import { window, ExtensionContext, commands } from 'vscode'; 
+import { window, ExtensionContext, commands, Uri } from 'vscode'; 
 
 import { Cmd } from './cmd';
-import { getRootDir, openAndFormatFile } from './util';
+import { getRootDir, openAndFormatFile, reformatDocument } from './util';
 
 import fs = require('fs');
 import snakeCase = require('snake-case');
@@ -95,4 +95,58 @@ async function generateTestFromImplementationRepo() {
 
         openAndFormatFile(filePath);
     });
+}
+
+export async function generateTestCode(name: string, text: string, type: number) {
+    const rootDir = getRootDir();
+
+    if (!rootDir) {
+        return;
+    }
+
+    if (!name) {
+        return;
+    }
+
+    let typeStr = "";
+    switch(type) {
+        case 1:
+            typeStr = "repository";
+            break;
+        case 2:
+            typeStr = "usecase";
+            break;
+        default:
+            window.showWarningMessage(`type not supporting`);
+            return;
+    }
+
+    const snakeName = snakeCase(name);
+    const lines = text.split("\n");
+    const reFuncName = new RegExp("(\\w+)[\\(]");
+    const newLines = [];
+
+    for (let line of lines) {
+        var f = reFuncName.exec(line.trim());
+
+        if (f && f[1]) {
+            newLines.push("");
+            newLines.push(`func Test${f[1]}(t *testing.T) {`);
+            newLines.push(`     t.Fatal("implement me!");`);
+            newLines.push("}");
+        }
+    }
+
+    const testCode = newLines.join("\n");
+
+    const filePath = `${rootDir}/${snakeName}/${typeStr}/${snakeName}_${typeStr}_test.go`;
+    var fileUri = Uri.file(filePath);
+
+    if (!fs.existsSync(filePath)) {
+        window.showWarningMessage(`Path file not exists`);
+        return;
+    }
+
+    fs.appendFileSync(filePath, testCode);
+    reformatDocument(fileUri);    
 }

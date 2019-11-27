@@ -1,8 +1,9 @@
-import { window, ExtensionContext, commands } from 'vscode';
+import { window, ExtensionContext, commands, Uri } from 'vscode';
 
 import { Cmd } from './cmd';
-import { getRootDir, openAndFormatFile, insertLineInFile } from './util';
+import { getRootDir, openAndFormatFile, insertLineInFile, reformatDocument } from './util';
 import { generateRepoCode } from './repository_code';
+import { generateTestCode } from './test';
 
 import fs = require('fs');
 import pascalCase = require('pascal-case');
@@ -76,7 +77,7 @@ async function generateImplementationRepo() {
     const text = editor.document.getText(editor.selection);
 
     editor.edit(builder => {
-        const reName = new RegExp("type (\\w*) interface {");
+        const reName = new RegExp("type Repository interface {");
         const reFun = new RegExp("(\\w*)");
 
         let lines = text.split('\n');
@@ -114,7 +115,8 @@ async function generateImplementationRepo() {
             return;
         }
 
-        insertLineInFile(filePath, `^var ${snakeName}Table =.*\"$`, interfaceCode);
+        fs.appendFileSync(filePath, interfaceCode);
+        generateTestCode(name, text, 1);
 
         openAndFormatFile(filePath);
     });
