@@ -46,6 +46,8 @@ async function generateUsecase() {
         value: '',
         placeHolder: 'Source directory, eg: github.com/soerjadi/go-extension'
     }) || "";
+
+    generateUsecaseCode(name, sourcePackage);
 }
 
 export async function generateUsecaseCode(name: string, sourcePackage: string, openFile: boolean = true) {
