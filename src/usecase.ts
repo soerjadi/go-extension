@@ -150,7 +150,7 @@ async function generateImplementationUsecase() {
 
         for (let line of lines) {
             var s = reName.exec(line);
-            if (s && s[1]) {
+            if (s && s[0]) {
                 continue;
             } else {
                 s = reFun.exec(line.trim());
