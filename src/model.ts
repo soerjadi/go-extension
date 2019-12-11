@@ -31,16 +31,21 @@ export function setup(context: ExtensionContext) {
 }
 
 async function createModel() {
+    const name = await window.showInputBox({
+        value: '',
+        placeHolder: 'Model name, eg: User'
+    }) || "";
+
+    generateModel(name);
+
+}
+
+export async function generateModel(name: string) {
     const rootDir = getRootDir();
 
     if (!rootDir) {
         return;
     }
-
-    const name = await window.showInputBox({
-        value: '',
-        placeHolder: 'Model name, eg: User'
-    }) || "";
 
     const namePascal = pascalCase(name);
     const nameSnake = snakeCase(name);
@@ -53,9 +58,6 @@ async function createModel() {
     const modelFilePath = `${modelPath}/${nameSnake}.go`;
     const repositoryFilePath = `${modelDirPath}/repository.go`;
     const usecaseFilePath = `${modelDirPath}/usecase.go`;
-
-    let repositoryFileExists = false;
-    let usecaseFilePathExists = false;
 
     if (!fs.existsSync(modelPath)) {
         window.showWarningMessage(`Path not exists: ${modelPath}`);
@@ -123,5 +125,4 @@ async function createModel() {
     generateUsecaseCode(name, "", false);
 
     openAndFormatFile(modelFilePath);
-
 }

@@ -32,7 +32,7 @@ export function setup(context: ExtensionContext) {
     }));
 }
 
-async function generateRepository() {
+export async function generateRepository() {
 
     const name = await window.showInputBox({
         value: '',
@@ -53,7 +53,7 @@ async function generateRepository() {
 
 }
 
-async function generateImplementationRepo() {
+export async function generateImplementationRepo() {
     const rootDir = getRootDir();
 
     if (!rootDir) {

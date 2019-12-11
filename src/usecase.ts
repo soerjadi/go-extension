@@ -31,7 +31,7 @@ export function setup(context: ExtensionContext) {
     }));
 }
 
-async function generateUsecase() {
+export async function generateUsecase() {
     const name = await window.showInputBox({
         value: '',
         placeHolder: 'Usecasename name, eg: User'
@@ -118,7 +118,7 @@ export async function generateUsecaseCode(name: string, sourcePackage: string, o
     }
 }
 
-async function generateImplementationUsecase() {
+export async function generateImplementationUsecase() {
     const rootDir = getRootDir();
 
     if (!rootDir) {

@@ -1,15 +1,15 @@
 import { ExtensionContext } from 'vscode';
 
-import * as repository from './repository';
-import * as usecase from './usecase';
-import * as model from './model';
+import * as pkg from './module';
+import * as core from './core';
+// import * as model from './model';
 import * as test from './test';
 
 export function activate(context: ExtensionContext) {
 
-    repository.setup(context);
-    usecase.setup(context);
-    model.setup(context);
+    pkg.setup(context);
+    core.setup(context);
+    // model.setup(context);
     test.setup(context);
 
 }

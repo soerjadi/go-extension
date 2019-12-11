@@ -20,22 +20,18 @@
     "contributes": {
         "commands": [
             {
-                "command": "extension.repository",
-                "title": "GO: Generate repository"
+                "command": "extension.module",
+                "title": "GoExt: Generate Module"
             },
             {
-                "command": "extension.usecase",
-                "title": "GO: Generate usecase"
-            },
-            {
-                "command": "extension.model",
-                "title": "Go: Generate model"
+                "command": "extension.core",
+                "title": "GoExt: Generate Core"
             },
             {
                 "command": "extention.test",
-                "title": "GO: Generate test case"
+                "title": "GoExt: Generate test case"
             }
-        ]
+		]
     },
     "scripts": {
         "vscode:prepublish": "yarn run compile",
