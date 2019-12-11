@@ -31,6 +31,12 @@
                 "command": "extention.test",
                 "title": "GoExt: Generate test case"
             }
+        ],
+        "snippets": [
+			{
+				"language": "go",
+				"path": "./go-snippet.json"
+			}
 		]
     },
     "scripts": {
