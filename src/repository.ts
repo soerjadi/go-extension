@@ -1,123 +1,152 @@
-import { window, ExtensionContext, commands, Uri } from 'vscode';
-
-import { Cmd } from './cmd';
-import { getRootDir, openAndFormatFile, insertLineInFile, reformatDocument } from './util';
-import { generateRepoCode } from './repository_code';
-import { generateTestCode } from './test';
-
+import { getRootDir, reformatDocument } from "./util";
+import pascalCase = require("pascal-case");
+import snakeCase = require("snake-case");
 import fs = require('fs');
-import pascalCase = require('pascal-case');
-import snakeCase = require('snake-case');
-import camelCase = require('camel-case');
+import { Uri } from "vscode";
+import camelCase = require("camel-case");
 
-export function setup(context: ExtensionContext) {
-    context.subscriptions.push(commands.registerCommand('extension.repository', async () => {
-        const quickPick = window.createQuickPick();
-        quickPick.items = [
-            new Cmd("Generate repository", () => generateRepository()),
-            new Cmd("Implement interface", () => generateImplementationRepo()),
-        ];
-        quickPick.onDidChangeSelection(selection => {
-            if (selection[0]) {
-                (selection[0] as Cmd).code_action(context)
-                    .catch(console.error)
-                    .then((result) => {
-                        console.log(result);
-                        quickPick.dispose();
-                    });
-            }
-        });
-        quickPick.onDidHide(() => quickPick.dispose());
-        quickPick.show();
-    }));
-}
-
-export async function generateRepository() {
-
-    const name = await window.showInputBox({
-        value: '',
-        placeHolder: 'Repository name, eg: User'
-    }) || "";
-
-    if (name.length === 0) {
-        window.showInformationMessage("No name");
-        return;
-    }
-
-    const sourcePackage = await window.showInputBox({
-        value: '',
-        placeHolder: 'Source directory, eg: github.com/soerjadi/go-extension'
-    }) || "";
-
-    generateRepoCode(name, sourcePackage);
-
-}
-
-export async function generateImplementationRepo() {
+export async function generateRepositoryModule(name: string) {
     const rootDir = getRootDir();
 
     if (!rootDir) {
         return;
     }
 
-    const name = await window.showInputBox({
-        value: '',
-        placeHolder: 'Repository name, eg: User'
-    }) || "";
+    const nameSnake = snakeCase(name);
+    const namePascal = pascalCase(name);
 
-    if (name.length === 0) {
-        window.showInformationMessage("No name");
+    const repositoryPath = `${rootDir}/modules/${nameSnake}/domain/repository`;
+    const repositoryFilePath = `${repositoryPath}/${nameSnake}.go`;
+
+    if (!fs.existsSync(repositoryPath)) {
+        fs.mkdirSync(repositoryPath);
+    }
+
+    const repositoryCode = `
+package repository
+
+import "../../domain"
+
+// ${namePascal}Repository service layer
+type ${namePascal}Repository interface {
+    GetByID(id int64) (*domain.${namePascal}, error)
+}
+    `;
+
+    fs.writeFileSync(repositoryFilePath, repositoryCode);
+
+    var repositoryFileUri = Uri.file(repositoryFilePath);
+    reformatDocument(repositoryFileUri);
+}
+
+export async function generatePersistanceRepositoryModule(name: string) {
+    const rootDir = getRootDir();
+
+    if (!rootDir) {
         return;
     }
 
-    const snakeName = snakeCase(name);
-    const camelName = camelCase(name);
+    const nameSnake = snakeCase(name);
+    const namePascal = pascalCase(name);
+    const nameRepository = pascalCase(name + " repository");
 
-    const editor = window.activeTextEditor!;
-    const text = editor.document.getText(editor.selection);
+    const infraStrcPath = `${rootDir}/modules/${nameSnake}/infrasturcuture`;
+    const repositoryPath = `${infraStrcPath}/persistance`;
+    const repositoryFilePath = `${repositoryPath}/${snakeCase(name)}_repository.go`;
+    const repositoryTestFilePath = `${repositoryPath}/${snakeCase(name)}_repository_test.go`;
+    
+    if (!fs.existsSync(infraStrcPath)) {
+        fs.mkdirSync(infraStrcPath);
+    }
 
-    editor.edit(builder => {
-        const reName = new RegExp("type Repository interface {");
-        const reFun = new RegExp("(\\w*)");
+    if (!fs.existsSync(repositoryPath)) {
+        fs.mkdirSync(repositoryPath);
+    }
 
-        let lines = text.split('\n');
-        let newLines = [];
+    const repositoryCode = `
+package persistance
 
-        for (let line of lines) {
-            var s = reName.exec(line);
-            if (s && s[0]) {
-                continue;
-            } else {
-                s = reFun.exec(line.trim());
-                if (s === null) {
-                    continue;
-                }
+import (
+    cfg "../../../../systems/config"
+    "../../domain"
+    "../../domain/repository"
+);
 
-                if (s[1]) {
-                    // get line as function
-                    newLines.push("");
-                    newLines.push(`// ${s[1]} description`);
-                    newLines.push(`func (repo *${camelName}RepositoryImpl) ${line.trim()} {`);
-                    newLines.push(`     panic("implement me")`);
-                    newLines.push("}");
-                }
-                
-            }
+// ${nameRepository}Impl --
+type ${nameRepository}Impl struct {
+    DB *gorm.DB
+} 
 
-        }
+// New${nameRepository}WithRDB --
+func New${nameRepository}WithRDB() repository.${nameRepository} {
+    db := cfg.Config.DB
+    return &${nameRepository}Impl{
+        DB: db,
+    }
+}
 
-        const interfaceCode = newLines.join('\n');
+func (r *${nameRepository}Impl) GetByID(id int64) (*domain.${namePascal}, error) {
+    return nil, nil
+}
+    `;
 
-        const filePath = `${rootDir}/${snakeName}/repository/${snakeName}_repository.go`;
+    const repositoryTestCode = `
+package persistance_test
 
-        if (!fs.existsSync(filePath)) {
-            window.showWarningMessage(`Path file not exists: ${filePath}`);
-            return;
-        }
+import (
+    "github.com/DATA-DOG/go-sqlmock"
+    "github.com/jinzhu/gorm"
+    "github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/suite"
+    "github.com/stretchr/testify/assert"
 
-        fs.appendFileSync(filePath, interfaceCode);
-        generateTestCode(name, text, 1);
+    "testing"
+    "database/sql"
+);
 
-        openAndFormatFile(filePath);
-    });
+type ${nameRepository}Suite struct {
+    suite.Suite
+    DB *gorm.DB
+    mock sqlmock.Sqlmock
+    repository *${nameRepository}Impl
+}
+
+func (suite *${nameRepository}Suite) SetupTest() {
+    var (
+        db  *sql.DB
+        err error
+    )
+
+    db, suite.mock, err = sqlmock.New()
+
+    require.NoError(suite.T(), err)
+
+    suite.DB, err = gorm.Open("postgres", db)
+
+    require.NoError(suite.T(), err)
+
+    suite.DB.LogMode(true)
+    suite.repository = &${nameRepository}Impl{DB: suite.DB}
+}
+
+func (suite *${nameRepository}Suite) AfterTest(_, _ string) {
+    require.NoError(suite.T(), suite.mock.ExpectationsWereMet())
+}
+
+func TestInit(t *testing.T) {
+    suite.Run(t, new(${nameRepository}Suite))
+}
+
+func (suite *${nameRepository}) TestGetByID() {
+    assert.Fail(t, "Implement me!")
+}
+    `;
+
+    fs.writeFileSync(repositoryFilePath, repositoryCode);
+    fs.writeFileSync(repositoryTestFilePath, repositoryTestCode);
+
+    var repositoryFileUri = Uri.file(repositoryFilePath);
+    var repositoryTestFileUri = Uri.file(repositoryTestFilePath);
+    reformatDocument(repositoryFileUri);
+    reformatDocument(repositoryTestFileUri);
 }
