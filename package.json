@@ -5,7 +5,7 @@
     "publisher": "Soerja",
     "repository": "https://github.com/soerjadi/go-extension",
     "license": "SEE LICENSE IN LICENSE",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "engines": {
         "vscode": "^1.36.0",
         "node": ">=6.0.0"
@@ -22,11 +22,15 @@
         "commands": [
             {
                 "command": "extension.repository",
-                "title": "Go: Generate Repository"
+                "title": "Go: Generate Repository Layer"
             },
             {
                 "command": "extension.usecase",
-                "title": "Go: Generate Usecase"
+                "title": "Go: Generate Usecase Layer"
+            },
+            {
+                "command": "extension.delivery",
+                "title": "Go: Generate Delivery Layer"
             }
         ],
         "snippets": [

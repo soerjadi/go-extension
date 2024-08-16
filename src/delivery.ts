@@ -1,11 +1,39 @@
+import { commands, ExtensionContext, window } from 'vscode';
 import { getRootDir, reformatDocument } from "./util";
-import pascalCase = require("pascal-case");
 import snakeCase = require("snake-case");
 import fs = require('fs');
-import { Uri } from "vscode";
 import camelCase = require("camel-case");
 
-export async function generateDeliveryRestModule(module: string, name: string) {
+export async function setup(context: ExtensionContext) {
+    context.subscriptions.push(commands.registerCommand('extension.delivery', async () => {
+        const module = await window.showInputBox({
+            value: '',
+            placeHolder: 'Go Module. ex: github.com/soerjadi/shorty'
+        }) || '';
+
+        const name = await window.showInputBox({
+            value: '',
+            placeHolder: 'Repository name'
+        }) || '';
+
+
+        if (module.length == 0) {
+            window.showInformationMessage("No module name");
+            return;
+        }
+
+        if (name.length == 0) {
+            window.showInformationMessage("No repository name");
+            return;
+        }
+
+
+        generateDeliveryRestModule(name, module);
+
+    }))
+}
+
+async function generateDeliveryRestModule(module: string, name: string) {
 	const rootDir = getRootDir();
 
     if (!rootDir) {

@@ -2,10 +2,27 @@ import { getRootDir, reformatDocument } from "./util";
 import pascalCase = require("pascal-case");
 import snakeCase = require("snake-case");
 import fs = require('fs');
-import { Uri } from "vscode";
+import { ExtensionContext, commands, window } from "vscode";
 import camelCase = require("camel-case");
 
-export async function generateRepositoryModule(name: string) {
+export async function setup(context: ExtensionContext) {
+    context.subscriptions.push(commands.registerCommand('extension.repository', async () => {
+        const name = await window.showInputBox({
+            value: '',
+            placeHolder: 'Repository name'
+        }) || "";
+
+        if (name.length == 0) {
+            window.showInformationMessage("No repository name");
+            return;
+        }
+
+        generateRepositoryModule(name);
+
+    }))
+}
+
+async function generateRepositoryModule(name: string) {
     const rootDir = getRootDir();
 
     if (!rootDir) {
@@ -43,12 +60,12 @@ package ${nameSnake}
 
 type prepareQuery struct{
 }
-    `;
+`;
     
     
     const queryFileCode = `
 package ${nameSnake}
-    `;
+`;
     
     fs.writeFileSync(constFilePath, constFileCode);
     fs.writeFileSync(queryFilePath, queryFileCode);
@@ -69,11 +86,11 @@ async function generateRepositoryPath(name: string) {
 
     const repositoryCode = `
 package ${nameSnake}
-    `;
+`;
 
     const repositoryTestCode = `
 package ${nameSnake}
-    `;
+`;
 
     fs.writeFileSync(repositoryPath, repositoryCode);
     fs.writeFileSync(repositoryTestPath, repositoryTestCode);
@@ -116,7 +133,7 @@ func GetRepository(db *sqlx.DB) (Repository, error) {
 	}, nil
 }
 
-    `;
+`;
 
     const initTestCode = `
 package ${nameSnake}  
@@ -184,7 +201,7 @@ func TestGetRepository(t *testing.T) {
 		})
 	}
 }
-    `;
+`;
 
     fs.writeFileSync(initPath, initCode);
     fs.writeFileSync(initTestPath, initTestCode);
@@ -214,7 +231,7 @@ type Repository interface{
 type ${nameCamel}Repository struct {
     query prepareQuery
 }
-    `;
+`;
 
     fs.writeFileSync(typeRepositoryPath, typeRepositoryCode);
 }

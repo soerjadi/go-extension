@@ -2,10 +2,31 @@ import { getRootDir, reformatDocument } from "./util";
 import pascalCase = require("pascal-case");
 import snakeCase = require("snake-case");
 import fs = require('fs');
-import { Uri } from "vscode";
+import { ExtensionContext, commands, window } from "vscode";
 import camelCase = require("camel-case");
 
-export async function generateUsecaseModule(name: string) {
+export async function setup(context: ExtensionContext) {
+    context.subscriptions.push(commands.registerCommand('extension.usecase', async () => {
+
+        const name = await window.showInputBox({
+            value: '',
+            placeHolder: 'Repository name'
+        }) || '';
+
+
+
+        if (name.length == 0) {
+            window.showInformationMessage("No repository name");
+            return;
+        }
+
+
+        generateUsecaseModule(name);
+
+    }))
+}
+
+async function generateUsecaseModule(name: string) {
     const rootDir = getRootDir();
 
     if (!rootDir) {
@@ -65,7 +86,7 @@ package ${nameSnake}
 func GetUsecase() Usecase {
     return &${nameCamel}Usecase{}
 }
-    `;
+`;
 
     const initTestcode = `
 package ${nameSnake}    
@@ -97,7 +118,7 @@ func TestGetUsecase(t *testing.T) {
 		})
 	}
 }
-    `;
+`;
 
     fs.writeFileSync(initFilePath, initCode);
     fs.writeFileSync(initTestFilePath, initTestcode);
@@ -125,7 +146,7 @@ type Usecase interface {
 
 type ${nameCamel}Usecase struct {
 }
-    `;
+`;
 
     fs.writeFileSync(typeFilePath, typeCode);
 }
