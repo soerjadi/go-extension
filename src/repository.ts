@@ -13,33 +13,185 @@ export async function generateRepositoryModule(name: string) {
     }
 
     const nameSnake = snakeCase(name);
-    const namePascal = pascalCase(name);
 
-    const repositoryPath = `${rootDir}/modules/${nameSnake}/domain/repository`;
-    const repositoryFilePath = `${repositoryPath}/${nameSnake}.go`;
-
+    const repositoryPath = `${rootDir}/internal/repository/${nameSnake}`;
     if (!fs.existsSync(repositoryPath)) {
-        fs.mkdirSync(repositoryPath);
+        fs.mkdirSync(repositoryPath)
     }
 
+    generateQueryRepositry(name);
+    generateInitPath(name);
+    generateRepositoryPath(name);
+    generateTypePath(name);
+
+}
+
+async function generateQueryRepositry(name: string) {
+    const rootDir = getRootDir();
+
+    if (!rootDir) {
+        return;
+    }
+
+    const nameSnake = snakeCase(name);
+    
+    const constFilePath = `${rootDir}/internal/repository/${nameSnake}/const_query.go`;
+    const queryFilePath = `${rootDir}/internal/repository/${nameSnake}/query.go`;
+
+    const constFileCode = `
+package ${nameSnake}
+
+type prepareQuery struct{
+}
+    `;
+    
+    
+    const queryFileCode = `
+package ${nameSnake}
+    `;
+    
+    fs.writeFileSync(constFilePath, constFileCode);
+    fs.writeFileSync(queryFilePath, queryFileCode);
+
+}
+
+async function generateRepositoryPath(name: string) {
+    const rootDir = getRootDir();
+
+    if (!rootDir) {
+        return;
+    }
+
+    const nameSnake = snakeCase(name);
+
+    const repositoryPath = `${rootDir}/internal/repository/${nameSnake}/repository.go`;
+    const repositoryTestPath = `${rootDir}/internal/repository/${nameSnake}/repository_test.go`;
+
     const repositoryCode = `
-package repository
+package ${nameSnake}
+    `;
 
-import "../../domain"
+    const repositoryTestCode = `
+package ${nameSnake}
+    `;
 
-// ${namePascal}Repository service layer
-type ${namePascal}Repository interface {
-    GetByID(id int64) (*domain.${namePascal}, error)
+    fs.writeFileSync(repositoryPath, repositoryCode);
+    fs.writeFileSync(repositoryTestPath, repositoryTestCode);
+}
+
+async function generateInitPath(name: string) {
+    const rootDir = getRootDir();
+
+    if (!rootDir) {
+        return;
+    }
+
+    const nameSnake = snakeCase(name);
+    const nameCamelCase = camelCase(name);
+
+    const initPath = `${rootDir}/internal/repository/${nameSnake}/init.go`;
+    const initTestPath = `${rootDir}/internal/repository/${nameSnake}/init_test.go`;
+
+    const initCode = `
+package ${nameSnake}
+
+import "github.com/jmoiron/sqlx"
+
+func prepareQueries(db *sqlx.DB) (prepareQuery, error) {
+    var (
+        q prepareQuery
+    )
+
+    return q, nil
+}
+
+func GetRepository(db *sqlx.DB) (Repository, error) {
+	query, err := prepareQueries(db)
+	if err != nil {
+		return nil, err
+	}
+
+	return &${nameCamelCase}Repository{
+		query: query,
+	}, nil
+}
+
+    `;
+
+    const initTestCode = `
+package ${nameSnake}  
+
+import (
+    "database/sql"
+    "reflect"
+    "testing"
+
+    "github.com/DATA-DOG/go-sqlmock"
+    "github.com/jmoiron/sqlx"
+)
+
+type prepareQueryMock struct {
+}
+
+func expectPrepareMock(mock sqlmock.Sqlmock) prepareQueryMock {
+    prepareQuery := prepareQueryMock{}
+
+    return prepareQuery
+}
+
+func TestGetRepository(t *testing.T) {
+
+	tests := []struct {
+		name     string
+		initMock func() (*sqlx.DB, *sql.DB, sqlmock.Sqlmock)
+		want     func(db *sqlx.DB) Repository
+		wantErr  bool
+	}{
+		{
+			name: "success",
+			initMock: func() (*sqlx.DB, *sql.DB, sqlmock.Sqlmock) {
+				db, mock, _ := sqlmock.New()
+				expectPrepareMock(mock)
+				expectPrepareMock(mock)
+				return sqlx.NewDb(db, "postgres"), db, mock
+			},
+			want: func(db *sqlx.DB) Repository {
+				q, _ := prepareQueries(db)
+
+				return &${nameCamelCase}Repository{
+					query: q,
+				}
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, dbMock, mock := tt.initMock()
+			defer dbMock.Close()
+
+			got, err := GetRepository(db)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetRepository() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			want := tt.want(db)
+			if !reflect.DeepEqual(got, want) {
+				t.Errorf("GetRepository() = %v, want %v", got, want)
+			}
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err.Error())
+			}
+		})
+	}
 }
     `;
 
-    fs.writeFileSync(repositoryFilePath, repositoryCode);
+    fs.writeFileSync(initPath, initCode);
+    fs.writeFileSync(initTestPath, initTestCode);
 
-    var repositoryFileUri = Uri.file(repositoryFilePath);
-    reformatDocument(repositoryFileUri);
 }
 
-export async function generatePersistanceRepositoryModule(name: string) {
+async function generateTypePath(name:string) {
     const rootDir = getRootDir();
 
     if (!rootDir) {
@@ -48,105 +200,21 @@ export async function generatePersistanceRepositoryModule(name: string) {
 
     const nameSnake = snakeCase(name);
     const namePascal = pascalCase(name);
-    const nameRepository = pascalCase(name + " repository");
+    const nameCamel = camelCase(name);
 
-    const infraStrcPath = `${rootDir}/modules/${nameSnake}/infrasturcuture`;
-    const repositoryPath = `${infraStrcPath}/persistance`;
-    const repositoryFilePath = `${repositoryPath}/${snakeCase(name)}_repository.go`;
-    const repositoryTestFilePath = `${repositoryPath}/${snakeCase(name)}_repository_test.go`;
-    
-    if (!fs.existsSync(infraStrcPath)) {
-        fs.mkdirSync(infraStrcPath);
-    }
+    const typeRepositoryPath = `${rootDir}/internal/repository/${nameSnake}/type.go`;
 
-    if (!fs.existsSync(repositoryPath)) {
-        fs.mkdirSync(repositoryPath);
-    }
+    const typeRepositoryCode = `
+package ${nameSnake}
 
-    const repositoryCode = `
-package persistance
-
-import (
-    cfg "../../../../systems/config"
-    "../../domain"
-    "../../domain/repository"
-);
-
-// ${nameRepository}Impl --
-type ${nameRepository}Impl struct {
-    DB *gorm.DB
-} 
-
-// New${nameRepository}WithRDB --
-func New${nameRepository}WithRDB() repository.${nameRepository} {
-    db := cfg.Config.DB
-    return &${nameRepository}Impl{
-        DB: db,
-    }
+//go:generate mockgen -package=mocks -mock_names=Repository=Mock${namePascal}Repository -destination=../../mocks/${nameSnake}_repo_mock.go -source=type.go
+type Repository interface{
 }
 
-func (r *${nameRepository}Impl) GetByID(id int64) (*domain.${namePascal}, error) {
-    return nil, nil
+type ${nameCamel}Repository struct {
+    query prepareQuery
 }
     `;
 
-    const repositoryTestCode = `
-package persistance_test
-
-import (
-    "github.com/DATA-DOG/go-sqlmock"
-    "github.com/jinzhu/gorm"
-    "github.com/stretchr/testify/require"
-    "github.com/stretchr/testify/suite"
-    "github.com/stretchr/testify/assert"
-
-    "testing"
-    "database/sql"
-);
-
-type ${nameRepository}Suite struct {
-    suite.Suite
-    DB *gorm.DB
-    mock sqlmock.Sqlmock
-    repository *${nameRepository}Impl
-}
-
-func (suite *${nameRepository}Suite) SetupTest() {
-    var (
-        db  *sql.DB
-        err error
-    )
-
-    db, suite.mock, err = sqlmock.New()
-
-    require.NoError(suite.T(), err)
-
-    suite.DB, err = gorm.Open("postgres", db)
-
-    require.NoError(suite.T(), err)
-
-    suite.DB.LogMode(true)
-    suite.repository = &${nameRepository}Impl{DB: suite.DB}
-}
-
-func (suite *${nameRepository}Suite) AfterTest(_, _ string) {
-    require.NoError(suite.T(), suite.mock.ExpectationsWereMet())
-}
-
-func TestInit(t *testing.T) {
-    suite.Run(t, new(${nameRepository}Suite))
-}
-
-func (suite *${nameRepository}) TestGetByID() {
-    assert.Fail(t, "Implement me!")
-}
-    `;
-
-    fs.writeFileSync(repositoryFilePath, repositoryCode);
-    fs.writeFileSync(repositoryTestFilePath, repositoryTestCode);
-
-    var repositoryFileUri = Uri.file(repositoryFilePath);
-    var repositoryTestFileUri = Uri.file(repositoryTestFilePath);
-    reformatDocument(repositoryFileUri);
-    reformatDocument(repositoryTestFileUri);
+    fs.writeFileSync(typeRepositoryPath, typeRepositoryCode);
 }

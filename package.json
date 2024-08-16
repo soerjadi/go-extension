@@ -5,7 +5,7 @@
     "publisher": "Soerja",
     "repository": "https://github.com/soerjadi/go-extension",
     "license": "SEE LICENSE IN LICENSE",
-    "version": "0.1.2",
+    "version": "1.0.1",
     "engines": {
         "vscode": "^1.36.0",
         "node": ">=6.0.0"
@@ -16,12 +16,17 @@
     "activationEvents": [
         "onLanguage:go"
     ],
+    "icon": "assets/go-extension.png",
     "main": "./out/extension.js",
     "contributes": {
         "commands": [
             {
-                "command": "extension.module",
-                "title": "GoExt: Generate Module"
+                "command": "extension.repository",
+                "title": "Go: Generate Repository"
+            },
+            {
+                "command": "extension.usecase",
+                "title": "Go: Generate Usecase"
             }
         ],
         "snippets": [
@@ -45,13 +50,15 @@
         "@types/vscode": "^1.36.0",
         "glob": "^7.1.4",
         "mocha": "^6.1.4",
-        "typescript": "^3.9.7",
         "tslint": "^5.12.1",
+        "typescript": "^3.9.7",
         "vscode-test": "^1.0.2"
     },
     "dependencies": {
+        "-": "^0.0.1",
+        "camel-case": "^3.0.0",
         "pascal-case": "^2.0.1",
         "snake-case": "^2.1.0",
-        "camel-case": "^3.0.0"
+        "vsce": "^1.83.0"
     }
 }
