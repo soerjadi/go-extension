@@ -13,7 +13,7 @@ export async function setup(context: ExtensionContext) {
 
         const name = await window.showInputBox({
             value: '',
-            placeHolder: 'Repository name'
+            placeHolder: 'Rest module name'
         }) || '';
 
 
@@ -28,7 +28,7 @@ export async function setup(context: ExtensionContext) {
         }
 
 
-        generateDeliveryRestModule(name, module);
+        generateDeliveryRestModule(module, name);
 
     }))
 }
@@ -65,8 +65,7 @@ async function generateFunctionFile(name: string) {
     const functionFilePath = `${rootDir}/internal/delivery/rest/${nameSnake}/function.go`;
     const functionTestFilePath = `${rootDir}/internal/delivery/rest/${nameSnake}/function_test.go`;
 
-    const functionCode = `
-package ${nameSnake}
+    const functionCode = `package ${nameSnake}
 
 import "net/http"
 
@@ -74,8 +73,7 @@ func (h *Handler) hello(w http.ResponseWriter, r *http.Request) (interface{}, er
 	return "hello world", nil
 }
 `;
-    const functionTestCode = `
-package ${nameSnake}
+    const functionTestCode = `package ${nameSnake}
 `;
 
     fs.writeFileSync(functionFilePath, functionCode);
@@ -94,8 +92,7 @@ async function generateInitFile(name: string, module: string) {
     const initFilePath = `${rootDir}/internal/delivery/rest/${nameSnake}/init.go`;
     const typeFilePath = `${rootDir}/internal/delivery/rest/${nameSnake}/type.go`;
 
-    const initFileCode = `
-package ${nameSnake}
+    const initFileCode = `package ${nameSnake}
 
 import (
 	"net/http"
@@ -114,8 +111,7 @@ func (h *Handler) RegisterRoutes(r *mux.Router) {
 }
 `;
 
-    const typeFileCode = `
-package ${nameSnake}
+    const typeFileCode = `package ${nameSnake}
 
 type Handler struct {
 }

@@ -55,16 +55,14 @@ async function generateQueryRepositry(name: string) {
     const constFilePath = `${rootDir}/internal/repository/${nameSnake}/const_query.go`;
     const queryFilePath = `${rootDir}/internal/repository/${nameSnake}/query.go`;
 
-    const constFileCode = `
-package ${nameSnake}
+    const constFileCode = `package ${nameSnake}
 
 type prepareQuery struct{
 }
 `;
     
     
-    const queryFileCode = `
-package ${nameSnake}
+    const queryFileCode = `package ${nameSnake}
 `;
     
     fs.writeFileSync(constFilePath, constFileCode);
@@ -84,12 +82,10 @@ async function generateRepositoryPath(name: string) {
     const repositoryPath = `${rootDir}/internal/repository/${nameSnake}/repository.go`;
     const repositoryTestPath = `${rootDir}/internal/repository/${nameSnake}/repository_test.go`;
 
-    const repositoryCode = `
-package ${nameSnake}
+    const repositoryCode = `package ${nameSnake}
 `;
 
-    const repositoryTestCode = `
-package ${nameSnake}
+    const repositoryTestCode = `package ${nameSnake}
 `;
 
     fs.writeFileSync(repositoryPath, repositoryCode);
@@ -109,8 +105,7 @@ async function generateInitPath(name: string) {
     const initPath = `${rootDir}/internal/repository/${nameSnake}/init.go`;
     const initTestPath = `${rootDir}/internal/repository/${nameSnake}/init_test.go`;
 
-    const initCode = `
-package ${nameSnake}
+    const initCode = `package ${nameSnake}
 
 import "github.com/jmoiron/sqlx"
 
@@ -135,8 +130,7 @@ func GetRepository(db *sqlx.DB) (Repository, error) {
 
 `;
 
-    const initTestCode = `
-package ${nameSnake}  
+    const initTestCode = `package ${nameSnake}  
 
 import (
     "database/sql"
@@ -221,8 +215,7 @@ async function generateTypePath(name:string) {
 
     const typeRepositoryPath = `${rootDir}/internal/repository/${nameSnake}/type.go`;
 
-    const typeRepositoryCode = `
-package ${nameSnake}
+    const typeRepositoryCode = `package ${nameSnake}
 
 //go:generate mockgen -package=mocks -mock_names=Repository=Mock${namePascal}Repository -destination=../../mocks/${nameSnake}_repo_mock.go -source=type.go
 type Repository interface{

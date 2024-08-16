@@ -59,8 +59,7 @@ async function generateFunctionPath(name: string) {
     const functionFilePath = `${rootDir}/internal/usecase/${nameSnake}/function.go`;
     const functionTestFilePath = `${rootDir}/internal/usecase/${nameSnake}/function_test.go`;
 
-    const functionCode = `
-package ${nameSnake}
+    const functionCode = `package ${nameSnake}
 `;
 
     fs.writeFileSync(functionFilePath, functionCode);
@@ -80,16 +79,14 @@ async function generateInitPpath(name: string) {
     const initFilePath = `${rootDir}/internal/usecase/${nameSnake}/init.go`;
     const initTestFilePath = `${rootDir}/internal/usecase/${nameSnake}/init_test.go`;
 
-    const initCode = `
-package ${nameSnake}    
+    const initCode = `package ${nameSnake}    
 
 func GetUsecase() Usecase {
     return &${nameCamel}Usecase{}
 }
 `;
 
-    const initTestcode = `
-package ${nameSnake}    
+    const initTestcode = `package ${nameSnake}    
 
 import (
     "reflect"
@@ -137,8 +134,7 @@ async function generateTypePath(name: string) {
 
     const typeFilePath = `${rootDir}/internal/usecase/${nameSnake}/type.go`;
 
-    const typeCode = `
-package ${nameSnake}   
+    const typeCode = `package ${nameSnake}   
 
 //go:generate mockgen -package=mocks -mock_names=Usecase=Mock${namePascal}Usecase -destination=../../mocks/${nameSnake}_usecase_mock.go -source=type.go
 type Usecase interface {
