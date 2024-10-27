@@ -1,67 +1,68 @@
 {
-    "generate metadata method POST": {
-        "prefix": "mux-postroute",
-        "body": ".Methods(\"POST\")",
-        "description": "generate metadata method POST"
+    "Initialization suite test": {
+        "prefix": "suitest",
+        "body": [
+            "package $1_test",
+            "",
+            "import (",
+            "   testing",
+            "   \"github.com/stretchr/testify/suite\"",
+            "",
+            "   . \"./\"",
+            ")",
+            "",
+            "type $2Suite struct {",
+            "   suite.Suite",
+            "   $3 $4",
+            "}",
+            "",
+            "func (suite *$2Suite) SetupTest() {",
+            "   $5",
+            "}",
+            "",
+            "func TestInit(t *testing.T) {",
+            "   suite.Run(t, new($2Suite))",
+            "}"
+        ],
+        "description": "initialization suite test"
     },
-    "generate metadata method GET": {
-        "prefix": "mux-route",
-        "body": ".Methods(\"GET\")",
-        "description": "generate metadata method GET"
+    "Generate function suite": {
+        "prefix": "fsuit",
+        "body": [
+            "func (suite *$1Suite) Test$2() {",
+            "   assert.Fail(suite.T(), \"implement me\")",
+            "}"
+        ],
+        "description": "generate function suite"
     },
     "fmt sprintf": {
         "prefix": "fs",
         "body": "fmt.Sprintf(\"$1\")",
         "description": "fmt sprintf"
     },
-    "generate default sql mock": {
-        "prefix": "mockinit",
-        "body": "db, mock, err := sqlmock.New()\nif err != nil {\n\tt.Fatalf(\"an error '%s' was not expected when opening a stub database connection\", err)\n}",
-        "description": "generate default sql mock"
+    "function struct implementation": {
+        "prefix": "funcs",
+        "body": "// $2 $6\nfunc ($1) $2($3) $4 {\n\t$5\n}",
+        "description": "Snippet for struct implementation"
     },
-    "ctx usecase": {
-        "prefix": "ctxusecase",
-        "body": "ctx, cancel := context.WithTimeout(ctx, $1)\ndefer cancel()",
-        "description": "define ctx usecase"
+    "parse int64": {
+        "prefix": "parsei64",
+        "body": "strconv.ParseInt($1, 10, 64)",
+        "description": "Parse string into int64"
     },
-    "init context": {
-        "prefix": "initctx",
-        "body": "ctx := ${1:r.Context()}\nif ctx == nil {\n\tctx = context.Background()\n}",
-        "description": "initialize context"
+    "func": {
+        "prefix": "func",
+        "body": "// $1 $6\nfunc $1($2) $4 {\n\t$5\n}",
+        "description": "generate function"
     },
-    "test step": {
-        "prefix": "funcstep",
-        "body": "t.Run($1, func(t *testing.T) {\n\t$2\n})",
-        "description": "create test step"
+    "response error" : {
+        "prefix": "resperror",
+        "body": "return $1.JSONError(c, ${2:http.StatusBadRequest}, err.Error())",
+        "description": "return error"
     },
-    "mux post handler": {
-        "prefix": "mux-posthandler",
-        "body": "// $2 $5\nfunc ($1) $2(w http.ResponseWriter, r *http.Request) {\n\tw.Header().Set(\"Content-Type\", \"application/json\")\n\n\tctx := r.Context()\n\tif ctx == nil {\n\t\tctx = context.Background()\n\t}\n\n\tvar ${3:structPost} $4\n\tbody, err := ioutil.ReadAll(r.Body)\n\tif err != nil {\n\t\t$5\n\t}\n\terr = json.Unmarshal(body, &$3)\n\n\tif err != nil {\n\t\t$5\n\t}\n}",
-        "description": "Gorilla Mux Function POST Handler"
-    },
-    "mux handler": {
-        "prefix": "mux-handler",
-        "body": "// $2 $5\nfunc ($1) $2(w http.ResponseWriter, r *http.Request) {\n\tctx := r.Context()\n\tif ctx == nil {\n\t\tctx = context.Background()\n\t}\n}",
-        "description": "Gorilla Mux Function POST Handler"
-    },
-    "mux param": {
-        "prefix": "mux-params",
-        "body": "params := r.URL.Query()",
-        "description": "Gorilla Mux Params"
-    },
-    "mux offset limit": {
-        "prefix": "mux-offlimit",
-        "body": "o := params.Get(\"offset\")\nl := params.Get(\"limit\")\n\nif o == \"\" {\n\to = \"0\"\n}\nif l == \"\" {\n\tl = \"10\"\n}\n\noffset, err := strconv.ParseInt(o, 10, 64)\nif err != nil {\n\t$1\n}\n\nlimit, err := strconv.ParseInt(l, 10, 64)\nif err != nil {\n\t$2\n}\n",
-        "description": "Gorrila Mux offset limit"
-    },
-    "mux param id": {
-        "prefix": "mux-id",
-        "body": "id, err := strconv.ParseInt(params.Get(\"id\"), 0, 64)\n\nif err != nil {\n\t$1\n}",
-        "description": "Gorrila Mux params ID"
-    },
-    "mux route handler": {
-        "prefix": "mux-routehandler",
-        "body": "// ${1:Handler} represent the http handler for $4\ntype $1 struct {\n\t${2:Usecase} $3\n}\n\n// New$1 initialize $4 resource endpoint\nfunc New$1(router *mux.Router, usecase $3) *mux.Router {\n\thandler := &$1{\n\t\t$2: usecase,\n\t}\n\n\th := router.PathPrefix(\"\").Subrouter()\n\n\treturn h\n}",
-        "description": "Gorrila Mux router handler"
+    "response success" : {
+        "prefix": "respsuccess",
+        "body": "return $1.JSONSuccess(c, ${2:null})",
+        "description": "return success shortcut"
     }
 }
